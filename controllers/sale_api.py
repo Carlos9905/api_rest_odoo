@@ -1,6 +1,4 @@
 from odoo import http
-from odoo.http import json, Response
-
 
 class SaleApi(http.Controller):
 
