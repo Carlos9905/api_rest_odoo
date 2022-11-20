@@ -3,6 +3,8 @@ from odoo.http import json, Response
 
 
 class SaleApi(http.Controller):
+
+    # Trae todas la ordenes de ventas
     @http.route("/api/v1/get_sale_order", type="http", auth="user", methods=["GET"])
     def get_sale_order(self, **kw):
         sales = http.request.env["sale.order"].sudo().search([])
@@ -13,6 +15,7 @@ class SaleApi(http.Controller):
         output += "</ul>"
         return output
 
+    # Crea ordenes de ventas
     @http.route(
         "/api/v1/create_sale_order",
         type="json",
@@ -21,14 +24,11 @@ class SaleApi(http.Controller):
         csrf=False,
     )
     def create_sale_order(self, **kw):
-        register = http.request.env["sale.order"].sudo().create(kw)
-        if register:
-            return {"message": "Insert"}
-        else:
-            return {"error": "Failed to insert"}
-
-    def build_response(self, entity):
-        response = json.dumps(entity, ensure_ascii=False).encode("utf8")
-        return Response(
-            response, content_type="aplication/json;charset=utf-8", status=200
-        )
+        sale = http.request.env["sale.order"].sudo().create(kw["params"])
+        for order_line in kw["order_line"]:
+            http.request.env["sale.order.line"].sudo().create({
+                "order_id": sale.id,
+                "product_id":order_line["product_id"],
+                "product_uom_qty":order_line["product_uom_qty"]
+            })
+        return {"message": "Insert"}, 200
